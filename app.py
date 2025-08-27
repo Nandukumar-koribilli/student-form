@@ -18,13 +18,19 @@ ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
 if not os.path.exists(UPLOAD_FOLDER):
     os.makedirs(UPLOAD_FOLDER)
 
+# --- NEW: ROUTE FOR THE HOMEPAGE ---
+@app.route('/')
+def index():
+    # This tells Flask to send the index.html file as the main page
+    return send_from_directory('.', 'index.html')
+
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 @app.route('/api/submit', methods=['POST'])
 def submit_form():
     try:
-        # Get form data
+        # (The rest of the file is the same)
         form_data = {
             'full_name': request.form.get('full_name'),
             'father_name': request.form.get('father_name'),
@@ -54,7 +60,6 @@ def submit_form():
             'submission_date': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
         }
 
-        # Handle file uploads
         for file_key in ['photo', 'signature']:
             if file_key in request.files:
                 file = request.files[file_key]
@@ -64,7 +69,6 @@ def submit_form():
                     file.save(file_path)
                     form_data[file_key] = file_path
 
-        # Save to Excel
         new_df = pd.DataFrame([form_data])
         try:
             with pd.ExcelWriter(EXCEL_FILE, mode='a', engine='openpyxl', if_sheet_exists='overlay') as writer:
